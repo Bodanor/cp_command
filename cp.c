@@ -1,5 +1,21 @@
 #include "cp.h"
 
+/*
+ * return -1 : If bytes differ from source to destination
+ * return 0 : If all bytes have been successfully copied to the file
+*/
+int write_buff(struct cp_handler *cp, char *buffer)
+{
+    cp->destination->size = fwrite(buffer, 1, cp->source->size, cp->destination->file_descriptor);
+    if (cp->destination->size != cp->source->size)
+        {
+            return -1;
+        }
+    else
+        return 0;
+
+}
+
 
 struct cp_handler *create_cp_handler(void)
 {
@@ -33,10 +49,10 @@ int verify_files(struct cp_handler *cp, char *source, char *destination)
     fd_src = fopen(source, "rb");
 
     /*
-     * I could use a single if statement with an || to dest wheter one of the file descriptor has failed
+     * I could use a single if statement with an || to test wheter one of the file descriptor has failed
      * But, because fopen with argument "wb", tends to overwrite existing file, I want to be sure
      * That it won't touch the destination file if the source file failed to be opened !
-     * And that way, I know which failed and return an appropriate error 
+     * And that way, I know which one failed and return an appropriate error 
      */
 
     if (fd_src == NULL)
@@ -55,43 +71,34 @@ int verify_files(struct cp_handler *cp, char *source, char *destination)
 
 }
 
-int bin_read(struct cp_handler *cp)
-{
-    assert(cp != NULL);
-
-    char buf[1000] = {0};
-    int i = 0, j;
-    char *binary_buff = (char*)malloc(sizeof(char)*STEPSIZE);
-    if (binary_buff == NULL)
-        return -1;
-
-    while (j = fread(buf, 1, STEPSIZE, cp->source->file_descriptor))
-    {
-        i+= j;
-        binary_buff = (char*)realloc(binary_buff, sizeof(char)*i);
-        if (binary_buff == NULL)
-            return -1;
-        
-        memcpy(binary_buff + (i-j), buf, j);
-    }
-
-    cp->binary_buffer = binary_buff;
-    cp->source->size = i;
-    
-    return 0;
-}
 
 int bin_copy(struct cp_handler *cp)
 {
     assert(cp != NULL || cp->binary_buffer != NULL);
-    cp->destination->size = fwrite(cp->binary_buffer, 1, cp->source->size, cp->destination->file_descriptor);
-    if (cp->destination->size != cp->source->size)
-        {
-            return -1;
-        }
-    else
-        return 0;
 
+    char buff[1000];
+    char *binary_buff = NULL;
+
+    int i = 0;
+    unsigned short j;
+    int status = 0;
+
+    while (j = fread(buff, 1, STEPSIZE, cp->source->file_descriptor))
+    {   
+        i+= j;
+        binary_buff = (char*)malloc(sizeof(char) *j);
+        if (binary_buff == NULL)
+            return -1;
+            
+        memcpy(binary_buff, buff, j);
+        cp->source->size = j;
+        status = write_buff(cp, binary_buff);
+        if (status == -1)
+            return -2;
+        free(binary_buff);
+    }
+
+    cp->source->size = i;
 }
 
 void destroy_cp_handler(struct cp_handler *cp)

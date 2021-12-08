@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    int file_status = 0;
+    unsigned short cpy_status, file_status;
 
     if (argc == 1)
         printf("No source file given !\n");
@@ -46,14 +46,15 @@ int main(int argc, char *argv[])
 
             else
             {
-                if (bin_read(cp) == -1)
-                {
-                    printf("[CRITICAL] Malloc Error !\n[CRITICAL] Not enough memory !\n");
-                    return -1;
-                }
-                if (bin_copy(cp) == -1)
+                cpy_status = bin_copy(cp);
+                if (cpy_status == -2)
                 {
                     printf("[WARNING] Bytes differ from source to destination !\n[WARNING] File created may be corrupted !\n");
+                    return -1;
+                }
+                else if (cpy_status == -1)
+                {
+                    printf("[CRITICAL] Memory error !\n");
                     return -1;
                 }
                 destroy_cp_handler(cp);

@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["/root/main.c", "test"],
+            "args": ["/home/liwinux/Desktop/cp_command/main.c", "test"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

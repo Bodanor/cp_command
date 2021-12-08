@@ -31,21 +31,16 @@ struct cp_handler *create_cp_handler(void);
 
 void destroy_cp_handler(struct cp_handler *cp);
 /*
- * return -1 if error I/O on source file
- * return -2 if error I/O on destination file
- * return 0 if everything went well !
+ * return -1 : if error I/O on source file
+ * return -2 : if error I/O on destination file
+ * return 0 : if everything went well !
 */
 int verify_files(struct cp_handler *cp, char *source, char *destination);
 
 /*
- * return -1 if malloc error
- * return 0 if binary has been red successfully
-*/ 
-int bin_read(struct cp_handler *cp);
-
-/*
- * return -1 if bytes copied are is different from the source file descriptor
- * return 0 if bytes are the same from the source file descriptor
+ * return -1 : If malloc error
+ * return -2 : If bytes copied are is different from the source file descriptor
+ * return 0 : If bytes are the same from the source file descriptor
  * 
 */ 
 int bin_copy(struct cp_handler *cp);
