@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["/home/liwinux/Desktop/cp_command/main.c", "test"],
+            "args": ["/media/liwinux/3232904D329017C5/Users/Christos/Downloads/DiscordSetup.exe", "../chris"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

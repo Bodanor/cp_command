@@ -1,7 +1,8 @@
 CC=gcc
+CARGS = -lpthread
 SRC = $(wildcard *.c)
 
 cp-cli: $(SRC)
 
-	$(CC) $^ -o $@
+	$(CC) $(CARGS) $^ -o $@
 	mv $@ ..

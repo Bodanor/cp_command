@@ -1,18 +1,42 @@
 #include "cp.h"
 
+void *copy_status(void *args)
+{
+    struct cp_handler *cp = args;
+
+    do
+    {
+        printf("Status : %.2lf %% copied\r" ,((double)cp->destination->size / (double)cp->total_size)*100);
+        fflush(stdout);
+
+    }while (cp->total_size != cp->destination->size);
+    
+
+}
+
 /*
  * return -1 : If bytes differ from source to destination
  * return 0 : If all bytes have been successfully copied to the file
 */
 int write_buff(struct cp_handler *cp, char *buffer)
 {
-    cp->destination->size = fwrite(buffer, 1, cp->source->size, cp->destination->file_descriptor);
-    if (cp->destination->size != cp->source->size)
+    
+    int byte_written = fwrite(buffer, 1 ,cp->source->size, cp->destination->file_descriptor);
+    if (byte_written != cp->source->size)
         {
             return -1;
         }
     else
+    {
+        if (((int)(((double)cp->destination->size / (double)cp->total_size)*100) % 25) == 0)
+        {
+            int fd = fileno(cp->destination->file_descriptor);
+            fdatasync(fd);
+            
+        }
+        cp->destination->size += byte_written;
         return 0;
+    }
 
 }
 
@@ -58,10 +82,10 @@ int verify_files(struct cp_handler *cp, char *source, char *destination)
     if (fd_src == NULL)
         return -1;
     
-    fd_dst = fopen(destination, "wb");
+    fd_dst = fopen(destination,"wb");
     if (fd_dst == NULL)
         return -2;
-    
+
     cp->destination->file_descriptor = fd_dst;
     cp->source->file_descriptor = fd_src;
     cp->destination->file_name = destination;
@@ -72,18 +96,32 @@ int verify_files(struct cp_handler *cp, char *source, char *destination)
 }
 
 
-int bin_copy(struct cp_handler *cp)
+int bin_copy(struct cp_handler *cp, int progress)
 {
     assert(cp != NULL || cp->binary_buffer != NULL);
 
-    char buff[1000];
+    pthread_t progress_thread;
+    if (progress == 1)
+    {
+        fseek(cp->source->file_descriptor, 0L, SEEK_END);
+        cp->total_size = ftell(cp->source->file_descriptor);
+        fseek(cp->source->file_descriptor, 0L, SEEK_SET);
+        
+        if (pthread_create(&progress_thread, NULL, copy_status,(void *)cp) < 0)
+        {
+            printf("Could not create thread !\n");
+            return -1;
+        }
+        
+    }
+    char buff[BUFSIZ];
     char *binary_buff = NULL;
 
-    int i = 0;
+    long long int i = 0;
     unsigned short j;
     int status = 0;
 
-    while (j = fread(buff, 1, STEPSIZE, cp->source->file_descriptor))
+    while (j = fread(buff, 1, BUFSIZ, cp->source->file_descriptor))
     {   
         i+= j;
         binary_buff = (char*)malloc(sizeof(char) *j);
@@ -96,9 +134,11 @@ int bin_copy(struct cp_handler *cp)
         if (status == -1)
             return -2;
         free(binary_buff);
+
     }
 
     cp->source->size = i;
+    pthread_join(progress_thread, NULL);
 }
 
 void destroy_cp_handler(struct cp_handler *cp)

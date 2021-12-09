@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    unsigned short cpy_status, file_status;
+    int short cpy_status, file_status;
 
     if (argc == 1)
         printf("No source file given !\n");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
             else
             {
-                cpy_status = bin_copy(cp);
+                cpy_status = bin_copy(cp, 1);
                 if (cpy_status == -2)
                 {
                     printf("[WARNING] Bytes differ from source to destination !\n[WARNING] File created may be corrupted !\n");
